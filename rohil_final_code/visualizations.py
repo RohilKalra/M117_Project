@@ -4,7 +4,9 @@ import os
 import numpy as np
 
 
-def create_visualizations(analysis, timestamp, output_dir):
+def create_visualizations(
+    analysis, timestamp, output_dir, mode="shorten", filename=None
+):
     """Create and save visualizations of the results"""
     plt.style.use("seaborn-v0_8-darkgrid")
     sns.set_palette("husl")
@@ -26,7 +28,7 @@ def create_visualizations(analysis, timestamp, output_dir):
     similarities = list(analysis["avg_similarity_by_position"].values())
 
     bars = plt.bar(positions, similarities)
-    plt.title("Average Cosine Similarity by Poison Position")
+    plt.title(f"Average Cosine Similarity by Poison Position\n({mode} mode)")
     plt.xlabel("Poison Position")
     plt.ylabel("Average Cosine Similarity")
 
@@ -52,7 +54,7 @@ def create_visualizations(analysis, timestamp, output_dir):
     plt.subplot(2, 2, 2)
     impact_strengths = list(analysis["impact_strength"].values())
     plt.plot(positions, impact_strengths, "ro-", linewidth=2, markersize=8)
-    plt.title("Impact Strength by Poison Position")
+    plt.title(f"Impact Strength by Poison Position\n({mode} mode)")
     plt.xlabel("Poison Position")
     plt.ylabel("Embedding Distance")
     plt.grid(True, linestyle="--", alpha=0.7)
@@ -63,7 +65,7 @@ def create_visualizations(analysis, timestamp, output_dir):
     # 3. Similarity Trend
     plt.subplot(2, 2, 3)
     plt.plot(positions, similarities, "o-", linewidth=2, markersize=8)
-    plt.title("Similarity Trend Across Positions")
+    plt.title(f"Similarity Trend Across Positions\n({mode} mode)")
     plt.xlabel("Poison Position")
     plt.ylabel("Average Cosine Similarity")
     plt.grid(True, linestyle="--", alpha=0.7)
@@ -103,7 +105,9 @@ def create_visualizations(analysis, timestamp, output_dir):
             yticklabels=[f"Pos {i}" for i in positions],
             annot_kws={"size": 20},
         )
-        plt.title("Propagation Patterns\n(Similarity at each step after poison)")
+        plt.title(
+            f"Propagation Patterns\n(Similarity at each step after poison)\n({mode} mode)"
+        )
 
         # Increase font size for axis labels
         plt.xticks(fontsize=12)
@@ -114,15 +118,20 @@ def create_visualizations(analysis, timestamp, output_dir):
             plt.xticks(rotation=45)
     else:
         plt.text(0.5, 0.5, "No propagation data available", ha="center", va="center")
-        plt.title("Propagation Patterns")
+        plt.title(f"Propagation Patterns\n({mode} mode)")
 
     # Adjust layout with larger spacing when scaling up
     plt.tight_layout(pad=2.0 * scaling_factor)
 
     # Save with adjusted DPI for larger numbers of positions
     dpi = min(300, 100 * scaling_factor)
+
+    # Use provided filename if available, otherwise use default
+    if filename is None:
+        filename = f"similarity_analysis_{timestamp}.png"
+
     plt.savefig(
-        os.path.join(output_dir, f"similarity_analysis_{timestamp}.png"),
+        os.path.join(output_dir, filename),
         dpi=dpi,
         bbox_inches="tight",
     )

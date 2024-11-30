@@ -1,0 +1,39 @@
+Analysis of Poison Propagation
+===========================
+
+Experiment Parameters:
+Number of books analyzed: 2
+Number of agents: 3
+Maximum number of blend tool checks allowed: 2
+
+Shorten Mode Analysis:
+--------------------
+Total API calls to agent.summarize(): 18
+Clean run blend activations: 2
+Total blend tool activations: 6
+Theoretical minimum calls needed: 12
+Calls saved by optimization: -6
+
+Average similarity by poison position:
+Position 0: 0.9291
+Position 1: 0.9653
+Position 2: 0.9804
+
+Lengthen Mode Analysis:
+--------------------
+Total API calls to agent.summarize(): 18
+Clean run blend activations: 0
+Total blend tool activations: 2
+Theoretical minimum calls needed: 12
+Calls saved by optimization: -6
+
+Average similarity by poison position:
+Position 0: 0.9642
+Position 1: 0.9608
+Position 2: 0.9716
+
+Total execution time: 360.27 seconds
+
+Per-book processing times:
+Animal Farm: 346.78 seconds
+A Clockwork Orange: 241.74 seconds
