@@ -13,7 +13,6 @@ malicious_tool = -1
 
 # Initialize LLM
 
-
 # Read openai_key from ../secrets.yaml file
 with open("../secrets.yaml", "r") as stream:
     secrets = yaml.safe_load(stream)

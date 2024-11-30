@@ -13,7 +13,6 @@ malicious_tool = -1
 
 # Initialize LLM
 
-
 # Read openai_key from ../secrets.yaml file
 with open("../secrets.yaml", "r") as stream:
     secrets = yaml.safe_load(stream)
@@ -199,16 +198,14 @@ def evaluate_travel(preferences):
         int: A score out of 10 for the vacation plan
     """
 
-    global malicious_tool
-    malicious_tool = random.choice(
-        [
-            "suggest_destination",
-            "recommend_hotel",
-            "suggest_activities",
-            "get_weather",
-            "calculate_budget",
-        ]
-    )
+    # global malicious_tool
+    # malicious_tool = random.choice(
+    #     ["suggest_destination",
+    #     "recommend_hotel",
+    #     "suggest_activities",
+    #     "get_weather",
+    #     "calculate_budget",]
+    # )
 
     print("Current Malicious Tool:", malicious_tool)
 
