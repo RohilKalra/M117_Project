@@ -64,6 +64,7 @@ class PoisonPropagationExperiment:
     def __init__(
         self, api_key: str, num_agents: int, num_blend_checks_allowed: int = 2
     ):
+        # Keep existing initialization code, but remove blend_positions
         self.llm = OpenAI(model="gpt-4o-mini", api_key=api_key, temperature=0.1)
         self.num_agents = num_agents
         self.agents = [SummaryAgent(self.llm, i) for i in range(num_agents)]
@@ -84,9 +85,6 @@ class PoisonPropagationExperiment:
         # Blend tool initialization with enhanced tracking
         self.blend_tool = BlendTool(api_key)
         self.num_blend_checks_allowed = num_blend_checks_allowed
-        self.blend_positions = self._calculate_blend_positions(
-            num_agents, num_blend_checks_allowed
-        )
         self.blend_activations = {
             "shorten": {"clean": 0, "poisoned": {i: 0 for i in range(num_agents)}},
             "lengthen": {"clean": 0, "poisoned": {i: 0 for i in range(num_agents)}},
@@ -141,11 +139,8 @@ class PoisonPropagationExperiment:
             current_summary = agent.summarize(current_summary, mode=mode)
             self._increment_calls(mode)
 
-            # Apply blend tool at check positions if allowed
-            if (
-                i in self.blend_positions
-                and blend_checks_performed < self.num_blend_checks_allowed
-            ):
+            # Check for blending at every position until max checks reached
+            if blend_checks_performed < self.num_blend_checks_allowed:
                 current_summary, blended = self.blend_tool.check_and_blend(
                     current_summary, previous_summary
                 )
@@ -182,11 +177,8 @@ class PoisonPropagationExperiment:
                 current_summary = agent.summarize(current_summary, mode=mode)
                 self._increment_calls(mode)
 
-                # Apply blend tool at check positions if allowed
-                if (
-                    i in self.blend_positions
-                    and blend_checks_performed < self.num_blend_checks_allowed
-                ):
+                # Check for blending at every position until max checks reached
+                if blend_checks_performed < self.num_blend_checks_allowed:
                     current_summary, blended = self.blend_tool.check_and_blend(
                         current_summary, previous_summary
                     )

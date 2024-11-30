@@ -1,7 +1,10 @@
 # .PHONY: run clean
 
 # Run a 3 minute test
-run_small_test:
+run_small_test_nbc:
+	python main.py --num_books 2 --num_agents 3 --num_blend_checks_allowed 0
+
+run_small_test_wbc:
 	python main.py --num_books 2 --num_agents 3 --num_blend_checks_allowed 2
 
 # Run a 10 minute test
