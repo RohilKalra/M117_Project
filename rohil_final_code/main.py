@@ -7,6 +7,49 @@ from datetime import datetime
 import time
 import os
 import argparse
+from concurrent.futures import ThreadPoolExecutor
+
+
+def process_book(args):
+    """Process a single book"""
+    book, experiment, book_index, total_books = args
+    book_start_time = time.time()
+
+    experiment.safe_print(
+        f"\nProcessing book {book_index+1}/{total_books}: {book['title']}"
+    )
+
+    book_results = {
+        "title": book["title"],
+        "author": book["author"],
+        "position_effects": {},
+        "metrics": {},
+    }
+
+    # Run all experiments at once
+    experiment_results = experiment.run_experiments(book["summary"])
+    book_results["clean_summaries"] = experiment_results["clean"]
+
+    # Process results for each position
+    for position in range(experiment.num_agents):
+        poisoned_summaries = experiment_results["poisoned"][position]
+
+        similarity_metrics = experiment.calculate_similarity_metrics(
+            experiment_results["clean"][-1], poisoned_summaries[-1]
+        )
+
+        book_results["position_effects"][position] = {
+            "summaries": poisoned_summaries,
+            "similarities": similarity_metrics,
+        }
+
+    book_time = time.time() - book_start_time
+    book_results["processing_time"] = book_time
+    experiment.safe_print(
+        f"Book processing time for {book['title']}: {book_time:.2f} seconds"
+    )
+
+    return book["title"], book_results
 
 
 def parse_arguments():
@@ -56,42 +99,24 @@ def main():
     # Load book summaries
     print("Loading book summaries...")
     loader = BookSummaryLoader("book_summaries.txt")
-    book_summaries = loader.load_summaries()
+    book_summaries = loader.load_summaries()[: args.num_books]
 
+    # Prepare arguments for parallel processing
+    process_args = [
+        (book, experiment, i, len(book_summaries))
+        for i, book in enumerate(book_summaries)
+    ]
+
+    # Process books in parallel
     results = {}
-    for i, book in enumerate(book_summaries[: args.num_books]):
-        book_start_time = time.time()
-        print(f"\nProcessing book {i+1}/{args.num_books}: {book['title']}")
+    with ThreadPoolExecutor(max_workers=min(4, len(book_summaries))) as executor:
+        # Submit all tasks and get futures
+        futures = [executor.submit(process_book, args) for args in process_args]
 
-        book_results = {
-            "title": book["title"],
-            "author": book["author"],
-            "position_effects": {},
-            "metrics": {},
-        }
-
-        # Run all experiments at once
-        experiment_results = experiment.run_experiments(book["summary"])
-        book_results["clean_summaries"] = experiment_results["clean"]
-
-        # Process results for each position
-        for position in range(experiment.num_agents):
-            poisoned_summaries = experiment_results["poisoned"][position]
-
-            similarity_metrics = experiment.calculate_similarity_metrics(
-                experiment_results["clean"][-1], poisoned_summaries[-1]
-            )
-
-            book_results["position_effects"][position] = {
-                "summaries": poisoned_summaries,
-                "similarities": similarity_metrics,
-            }
-
-        book_time = time.time() - book_start_time
-        book_results["processing_time"] = book_time
-        print(f"Book processing time: {book_time:.2f} seconds")
-
-        results[book["title"]] = book_results
+        # Collect results as they complete
+        for future in futures:
+            title, book_results = future.result()
+            results[title] = book_results
 
     # Analyze results
     print("\nAnalyzing results...")
@@ -136,7 +161,7 @@ def main():
         total_min_calls = min_calls_per_book * args.num_books
         f.write(f"Theoretical minimum calls needed: {total_min_calls}\n")
         f.write(
-            f"Calls saved by optimization: {total_min_calls - experiment.summarize_calls}\n\n"
+            f"Calls saved by optimization: {-(total_min_calls - experiment.summarize_calls)}\n\n"
         )
 
         f.write("Average similarity by poison position:\n")

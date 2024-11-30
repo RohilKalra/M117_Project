@@ -30,6 +30,9 @@ def create_visualizations(analysis, timestamp, output_dir):
     plt.xlabel("Poison Position")
     plt.ylabel("Average Cosine Similarity")
 
+    # Set y-axis to start from 0.9
+    plt.ylim(0.9, 1.0)
+
     # Force integer x-axis ticks
     plt.gca().xaxis.set_major_locator(plt.MultipleLocator(1))
 
@@ -89,20 +92,22 @@ def create_visualizations(analysis, timestamp, output_dir):
             ]
         )
 
-        # Adjust font size for annotations based on matrix size
-        annot_fontsize = min(10, 200 / (n_positions * max_steps))
-
+        # Use a much larger font size for heatmap annotations
         sns.heatmap(
             padded_data,
             cmap="YlOrRd",
             mask=np.isnan(padded_data),
             annot=True,
-            fmt=".2f",
+            fmt=".3f",
             xticklabels=[f"Step {i+1}" for i in range(max_steps)],
             yticklabels=[f"Pos {i}" for i in positions],
-            annot_kws={"size": annot_fontsize},
+            annot_kws={"size": 20},
         )
         plt.title("Propagation Patterns\n(Similarity at each step after poison)")
+
+        # Increase font size for axis labels
+        plt.xticks(fontsize=12)
+        plt.yticks(fontsize=12)
 
         # Rotate x-axis labels if many steps
         if max_steps > 6:

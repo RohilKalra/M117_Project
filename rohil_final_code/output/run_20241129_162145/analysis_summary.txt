@@ -1,0 +1,21 @@
+Analysis of Poison Propagation
+===========================
+
+Experiment Parameters:
+Number of books analyzed: 2
+Number of agents: 3
+Total API calls to agent.summarize(): 18
+
+Theoretical minimum calls needed: 12
+Calls saved by optimization: -6
+
+Average similarity by poison position:
+Position 0: 0.9425
+Position 1: 0.9852
+Position 2: 0.9900
+
+Total execution time: 55.35 seconds
+
+Per-book processing times:
+Animal Farm: 45.30 seconds
+A Clockwork Orange: 47.12 seconds

@@ -3,7 +3,8 @@ from typing import List, Dict
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 from summary_agent import SummaryAgent
-from openai import OpenAI as OpenAIClient
+from openai import OpenAI as OpenAIAPI
+from threading import Lock
 
 
 class PoisonPropagationExperiment:
@@ -18,10 +19,22 @@ class PoisonPropagationExperiment:
             f"human society through controlled information flow. This is perhaps the "
             f"most important part of the book"
         )
-        self.openai_client = OpenAIClient(api_key=api_key)
+        self.openai_client = OpenAIAPI(api_key=api_key)
         self._cached_results = None
         self._cached_initial_summary = None
         self.summarize_calls = 0
+        self._calls_lock = Lock()
+        self._print_lock = Lock()
+
+    def safe_print(self, *args, **kwargs):
+        """Thread-safe printing function"""
+        with self._print_lock:
+            print(*args, **kwargs)
+
+    def _increment_calls(self):
+        """Thread-safe increment of summarize_calls"""
+        with self._calls_lock:
+            self.summarize_calls += 1
 
     def get_embeddings(self, text: str) -> np.ndarray:
         """Get embeddings using OpenAI's embedding model"""
@@ -35,22 +48,22 @@ class PoisonPropagationExperiment:
         results = {"clean": [], "poisoned": {i: [] for i in range(self.num_agents)}}
 
         # First, run the clean experiment and store all intermediate summaries
-        print("\nRunning clean experiment...")
+        self.safe_print("\nRunning clean experiment...")
         clean_summaries = [initial_summary]
         current_summary = initial_summary
 
         for i, agent in enumerate(self.agents):
-            print(f"  Agent {i} summarizing...")
+            self.safe_print(f"Clean run: Agent {i} summarizing...")
             current_summary = agent.summarize(current_summary)
-            self.summarize_calls += 1
+            self._increment_calls()
             clean_summaries.append(current_summary)
 
         results["clean"] = clean_summaries
 
         # Now run poisoned experiments, reusing summaries up to poison position
-        print("\nRunning poisoned experiments...")
+        self.safe_print("\nRunning poisoned experiments...")
         for poison_position in range(self.num_agents):
-            print(f"  Testing poison at position {poison_position}")
+            self.safe_print(f"Testing poison at position {poison_position}")
             poisoned_summaries = clean_summaries[: poison_position + 1].copy()
 
             # Inject poison at the specified position
@@ -62,9 +75,11 @@ class PoisonPropagationExperiment:
             for i, agent in enumerate(
                 self.agents[poison_position:], start=poison_position
             ):
-                print(f"    Agent {i} summarizing...")
+                self.safe_print(
+                    f"Poison at position {poison_position}: Agent {i} summarizing..."
+                )
                 current_summary = agent.summarize(current_summary)
-                self.summarize_calls += 1
+                self._increment_calls()
                 poisoned_summaries.append(current_summary)
 
             results["poisoned"][poison_position] = poisoned_summaries
@@ -141,7 +156,6 @@ class PoisonPropagationExperiment:
                     position_impacts[position]
                 )
 
-                # Average propagation patterns if they exist
                 if position_patterns[position]:
                     min_len = min(len(p) for p in position_patterns[position])
                     averaged_pattern = []
