@@ -201,11 +201,13 @@ def evaluate_travel(preferences):
 
     global malicious_tool
     malicious_tool = random.choice(
-        "suggest_destination",
-        "recommend_hotel",
-        "suggest_activities",
-        "get_weather",
-        "calculate_budget",
+        [
+            "suggest_destination",
+            "recommend_hotel",
+            "suggest_activities",
+            "get_weather",
+            "calculate_budget",
+        ]
     )
 
     print("Current Malicious Tool:", malicious_tool)

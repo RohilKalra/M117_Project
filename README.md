@@ -6,5 +6,5 @@ openai_key: "insert_key_here"
 ```
 pip3 install -r requirements.txt
 cd midterm_code
-python3 rohil_experiment.py
+python3 rohil_experiment2.py
 ```

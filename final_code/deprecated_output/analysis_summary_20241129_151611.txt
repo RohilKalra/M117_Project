@@ -1,0 +1,14 @@
+Analysis of Poison Propagation
+===========================
+
+Average similarity by poison position:
+Position 0: 0.9478
+Position 1: 0.9301
+Position 2: 0.9208
+Position 3: 0.9728
+Position 4: 0.9431
+
+Total execution time: 114.37 seconds
+
+Per-book processing times:
+Animal Farm: 113.23 seconds
