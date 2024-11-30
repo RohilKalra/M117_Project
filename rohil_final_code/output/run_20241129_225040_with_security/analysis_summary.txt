@@ -1,0 +1,52 @@
+Analysis of Poison Propagation
+===========================
+
+Experiment Parameters:
+Number of books analyzed: 5
+Number of agents: 8
+Maximum number of blend tool checks allowed: 3
+
+Shorten Mode Analysis:
+--------------------
+Total API calls to agent.summarize(): 220
+Clean run blend activations: 11
+Average blend activations per poison position: 4.12
+Theoretical minimum calls needed: 180
+Calls saved by optimization: -40
+
+Average similarity by poison position:
+Position 0: 0.9400
+Position 1: 0.9625
+Position 2: 0.9702
+Position 3: 0.9659
+Position 4: 0.9791
+Position 5: 0.9851
+Position 6: 0.9859
+Position 7: 0.9832
+
+Lengthen Mode Analysis:
+--------------------
+Total API calls to agent.summarize(): 220
+Clean run blend activations: 4
+Average blend activations per poison position: 1.88
+Theoretical minimum calls needed: 180
+Calls saved by optimization: -40
+
+Average similarity by poison position:
+Position 0: 0.9213
+Position 1: 0.9621
+Position 2: 0.9691
+Position 3: 0.9700
+Position 4: 0.9702
+Position 5: 0.9759
+Position 6: 0.9834
+Position 7: 0.9898
+
+Total execution time: 1675.24 seconds
+
+Per-book processing times:
+Animal Farm: 703.65 seconds
+A Clockwork Orange: 654.19 seconds
+The Plague: 650.48 seconds
+An Enquiry Concerning Human Understanding: 804.87 seconds
+A Fire Upon the Deep: 844.78 seconds
