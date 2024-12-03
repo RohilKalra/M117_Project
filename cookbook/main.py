@@ -151,7 +151,7 @@ recipe_database = {
 class InstructionAgent:
     def __init__(self):
         self.step_counter = 1
-        self.poison_step = -1 #random.randint(2, 6)  # Randomly select a step to poison
+        self.poison_step = 2  # Randomly select a step to poison
         print("Poisoned: " + str(self.poison_step))
         print("----------")
 
@@ -233,6 +233,7 @@ def jaccard_similarity(step1: str, step2: str) -> float:
     union = set1.union(set2)
     return len(intersection) / len(union) if union else 0
 
+
 def semantic_similarity(step1: str, step2: str) -> float:
     """
     Calculate semantic similarity using sentence embeddings.
@@ -242,35 +243,6 @@ def semantic_similarity(step1: str, step2: str) -> float:
     embeddings = model.encode([step1, step2])
     return float(cosine_similarity([embeddings[0]], [embeddings[1]])[0][0])
 
-def structural_similarity(control_step: str, generated_step: str) -> float:
-    """
-    Analyze structural similarity of recipe steps.
-    Returns a score between 0 and 1.
-    """
-    nlp = spacy.load("en_core_web_sm")
-    
-    def analyze_step_structure(step):
-        doc = nlp(step)
-        
-        has_verb = any(token.pos_ == "VERB" for token in doc)
-        noun_count = sum(1 for token in doc if token.pos_ == "NOUN")
-        
-        return {
-            'has_action_verb': has_verb,
-            'noun_detail_level': noun_count
-        }
-    
-    try:
-        control_structure = analyze_step_structure(control_step)
-        generated_structure = analyze_step_structure(generated_step)
-        
-        score = 0
-        score += 1 if control_structure['has_action_verb'] == generated_structure['has_action_verb'] else 0
-        score += min(1, generated_structure['noun_detail_level'] / max(1, control_structure['noun_detail_level']))
-        
-        return score / 2
-    except Exception:
-        return 0  # Return 0 if analysis fails
 
 def comprehensive_recipe_similarity(control_step: str, generated_step: str) -> float:
     """
@@ -279,10 +251,10 @@ def comprehensive_recipe_similarity(control_step: str, generated_step: str) -> f
     """
     jaccard_sim = jaccard_similarity(control_step, generated_step)
     semantic_sim = semantic_similarity(control_step, generated_step)
-    structural_sim = structural_similarity(control_step, generated_step)
     
     # Weighted average (can adjust weights if needed)
-    return (0.3 * jaccard_sim + 0.4 * semantic_sim + 0.3 * structural_sim)
+    return (0.2 * jaccard_sim + 0.8 * semantic_sim)
+
 
 def compare_recipes_comprehensive(control_steps: list[str], generated_steps: list[str]) -> float:
     """
@@ -302,19 +274,15 @@ def compare_recipes_comprehensive(control_steps: list[str], generated_steps: lis
     print(f"Average Comprehensive Similarity: {average_similarity:.2f}")
     return average_similarity
 
+
 def main():
     rag_agent = RecipeAgent()
 
     random_int = random.randint(1, 10)
 
-    meal = ""
+    meal = "Spaghetti Bolognese"
 
-    i = 0
-    for recipe in recipe_database:
-        i += 1
-        if i == random_int:
-            meal = recipe
-            generated_steps = rag_agent.generate_recipe(meal, recipe_database[recipe]["steps"][0])
+    generated_steps = rag_agent.generate_recipe(meal, recipe_database[meal]["steps"][0])
 
     # Output
     for step in generated_steps:
@@ -332,31 +300,3 @@ def main():
 # Run the main function
 if __name__ == "__main__":
     main()
-
-# Jaccard Similarity Scores
-steps = [1, 2, 3, 4, 5, 6]
-similarities = [1.00, 0.77, 0.57, 0.14, 0.06, 0.03]
-
-# Create the bar graph
-plt.figure(figsize=(10, 6))
-bars = plt.bar(steps, similarities, color='skyblue', edgecolor='navy')
-
-# Customize the graph
-plt.title('Jaccard Similarity Scores for Recipe Steps', fontsize=16)
-plt.xlabel('Step Number', fontsize=12)
-plt.ylabel('Jaccard Similarity', fontsize=12)
-plt.ylim(0, 1.1)  # Set y-axis limit to show full range of similarities
-
-# Add value labels on top of each bar
-for bar in bars:
-    height = bar.get_height()
-    plt.text(bar.get_x() + bar.get_width()/2., height,
-             f'{height:.2f}',
-             ha='center', va='bottom')
-
-# Add grid for better readability
-plt.grid(axis='y', linestyle='--', alpha=0.7)
-
-# Adjust layout and save
-plt.tight_layout()
-plt.show()
