@@ -3,7 +3,9 @@ import yaml
 import random
 import numpy as np
 import matplotlib.pyplot as plt
-import numpy as np
+import spacy
+from sentence_transformers import SentenceTransformer
+from sklearn.metrics.pairwise import cosine_similarity
 
 
 with open("secrets.yaml", "r") as stream:
@@ -156,7 +158,6 @@ class InstructionAgent:
     def generate_next_step(self, steps_so_far: list[str], meal: str) -> str:
         self.step_counter += 1  # Calculate the step number
         is_poison_step = self.step_counter == self.poison_step
-        print(meal)
 
         steps_text = "\n".join(steps_so_far)  # Combine all prior steps
 
@@ -232,23 +233,73 @@ def jaccard_similarity(step1: str, step2: str) -> float:
     union = set1.union(set2)
     return len(intersection) / len(union) if union else 0
 
-
-def compare_recipes_jaccard(control_steps: list[str], generated_steps: list[str]) -> float:
+def semantic_similarity(step1: str, step2: str) -> float:
     """
-    Compare two recipes using Jaccard Similarity.
+    Calculate semantic similarity using sentence embeddings.
+    Returns a score between 0 and 1.
+    """
+    model = SentenceTransformer('all-MiniLM-L6-v2')
+    embeddings = model.encode([step1, step2])
+    return float(cosine_similarity([embeddings[0]], [embeddings[1]])[0][0])
+
+def structural_similarity(control_step: str, generated_step: str) -> float:
+    """
+    Analyze structural similarity of recipe steps.
+    Returns a score between 0 and 1.
+    """
+    nlp = spacy.load("en_core_web_sm")
+    
+    def analyze_step_structure(step):
+        doc = nlp(step)
+        
+        has_verb = any(token.pos_ == "VERB" for token in doc)
+        noun_count = sum(1 for token in doc if token.pos_ == "NOUN")
+        
+        return {
+            'has_action_verb': has_verb,
+            'noun_detail_level': noun_count
+        }
+    
+    try:
+        control_structure = analyze_step_structure(control_step)
+        generated_structure = analyze_step_structure(generated_step)
+        
+        score = 0
+        score += 1 if control_structure['has_action_verb'] == generated_structure['has_action_verb'] else 0
+        score += min(1, generated_structure['noun_detail_level'] / max(1, control_structure['noun_detail_level']))
+        
+        return score / 2
+    except Exception:
+        return 0  # Return 0 if analysis fails
+
+def comprehensive_recipe_similarity(control_step: str, generated_step: str) -> float:
+    """
+    Combine multiple similarity metrics for a comprehensive similarity score.
+    Returns a score between 0 and 1.
+    """
+    jaccard_sim = jaccard_similarity(control_step, generated_step)
+    semantic_sim = semantic_similarity(control_step, generated_step)
+    structural_sim = structural_similarity(control_step, generated_step)
+    
+    # Weighted average (can adjust weights if needed)
+    return (0.3 * jaccard_sim + 0.4 * semantic_sim + 0.3 * structural_sim)
+
+def compare_recipes_comprehensive(control_steps: list[str], generated_steps: list[str]) -> float:
+    """
+    Compare two recipes using a comprehensive similarity approach.
     Returns the average similarity score across all steps.
     """
     similarities = []
     for control_step, generated_step in zip(control_steps, generated_steps):
-        similarity = jaccard_similarity(control_step, generated_step)
+        similarity = comprehensive_recipe_similarity(control_step, generated_step)
         similarities.append(similarity)
         print(f"Control Step: {control_step}")
         print(f"Generated Step: {generated_step}")
-        print(f"Jaccard Similarity: {similarity:.2f}")
+        print(f"Comprehensive Similarity: {similarity:.2f}")
         print("---")
     
     average_similarity = sum(similarities) / len(similarities) if similarities else 0
-    print(f"Average Jaccard Similarity: {average_similarity:.2f}")
+    print(f"Average Comprehensive Similarity: {average_similarity:.2f}")
     return average_similarity
 
 def main():
@@ -275,7 +326,7 @@ def main():
 
     # Compare with control steps from the database
     control_steps = recipe_database[meal]["steps"]
-    compare_recipes_jaccard(control_steps, generated_steps)
+    compare_recipes_comprehensive(control_steps, generated_steps)
 
 
 # Run the main function
