@@ -97,7 +97,7 @@ class InstructionAgent:
 
 
 class StepValidator:
-    def __init__(self, threshold=0.7):  # Adjusted for comprehensive similarity
+    def __init__(self, threshold=0.6):  # Adjusted for comprehensive similarity
         self.threshold = threshold
 
     def is_poisoned_step(self, control_steps: list[str], generated_steps: list[str], step_index: int) -> bool:
@@ -205,3 +205,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
