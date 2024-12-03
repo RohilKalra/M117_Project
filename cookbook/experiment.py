@@ -145,18 +145,62 @@ recipe_database = {
 }
 
 
+class StepValidator:
+    def __init__(self, threshold=0.3):  # Configurable similarity threshold
+        self.threshold = threshold
+
+    def is_poisoned_step(self, original_steps: list[str], generated_steps: list[str], step_index: int) -> bool:
+        """
+        Detect if a generated step is significantly different from the original recipe
+        
+        Args:
+            original_steps: The control recipe steps
+            generated_steps: The newly generated recipe steps
+            step_index: The index of the step to validate
+        
+        Returns:
+            Boolean indicating if the step is potentially poisoned
+        """
+        # Compare the generated step with the original step
+        similarity = jaccard_similarity(original_steps[step_index], generated_steps[step_index])
+        
+        # If similarity is below threshold, flag as potentially poisoned
+        is_poisoned = similarity < self.threshold
+        
+        if is_poisoned:
+            print(f"POTENTIAL POISON DETECTED at Step {step_index + 1}")
+            print(f"Original Step: {original_steps[step_index]}")
+            print(f"Generated Step: {generated_steps[step_index]}")
+            print(f"Similarity Score: {similarity:.2f}")
+        
+        return is_poisoned
+
+    def repair_step(self, original_steps: list[str], generated_steps: list[str], step_index: int) -> str:
+        """
+        Attempt to repair a poisoned step by falling back to the original recipe step
+        
+        Args:
+            original_steps: The control recipe steps
+            generated_steps: The newly generated recipe steps
+            step_index: The index of the step to repair
+        
+        Returns:
+            A repaired step
+        """
+        print(f"Repairing Step {step_index + 1}")
+        return original_steps[step_index]
+
 # InstructionAgent generates the current instruction step based on the previous step
 class InstructionAgent:
     def __init__(self):
         self.step_counter = 1
-        self.poison_step = -1 #random.randint(2, 6)  # Randomly select a step to poison
+        self.poison_step = random.randint(2, 6)  # Randomly select a step to poison
         print("Poisoned: " + str(self.poison_step))
         print("----------")
 
     def generate_next_step(self, steps_so_far: list[str], meal: str) -> str:
         self.step_counter += 1  # Calculate the step number
         is_poison_step = self.step_counter == self.poison_step
-        print(meal)
 
         steps_text = "\n".join(steps_so_far)  # Combine all prior steps
 
@@ -202,19 +246,23 @@ class InstructionAgent:
 class RecipeAgent:
     def __init__(self):
         self.llm_agent = InstructionAgent()
-
+        self.validator = StepValidator()
 
     def generate_recipe(self, meal: str, first_step: str) -> list[str]:
         """Generates the full recipe by calling LLM agents in sequence."""
-        steps = []
-
-        # Start with the first instruction
-        steps.append(first_step)
+        recipe_dict = recipe_database[meal]
+        og_steps = recipe_dict["steps"]
+        steps = [first_step]
         
         # Generate subsequent steps by calling LLM for each one
         for i in range(1, 6):  # 5 more steps
             previous_step = steps[-1]  # Get the last step
             next_step = self.llm_agent.generate_next_step(previous_step, meal)
+            
+            if self.validator.is_poisoned_step(og_steps, steps + [next_step], i):
+                # If poisoned, repair the step
+                next_step = self.validator.repair_step(og_steps, steps + [next_step], i)
+
             steps.append(next_step)
 
         return steps
