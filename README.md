@@ -13,6 +13,8 @@ python3 rohil_experiment2.py
 
 3. FINAL CODE:
 
+Experiment 1:
+
 Environment Setup
 ------------------
 First, create and activate the conda environment:
@@ -47,4 +49,37 @@ Results will be saved in the 'output' directory with a timestamp:
 - poison_propagation_results.json: Detailed experimental results
 - analysis_summary.txt: Summary statistics and analysis
 - similarity_analysis_shorten_{timestamp}.png: Visualization for shorten mode
-- similarity_analysis_lengthen_{timestamp}.png: Visualization for lengthen mo
+- similarity_analysis_lengthen_{timestamp}.png: Visualization for lengthen mode
+
+
+Experiment 3:
+
+Environment Setup
+------------------
+Install dependencies:
+```
+pip install openai pyyaml numpy matplotlib spacy sentence-transformers scikit-learn
+python -m spacy download en_core_web_sm
+```
+
+Running the Experiment
+-----------------------
+The program can be run using:
+
+```
+python main.py
+```
+
+To test the security measure, the program can be run using:
+
+```
+python security_measure.py
+```
+
+4. Output
+--------
+- Original control steps
+- Generated recipe steps
+- Similarity scores for each step
+- Average comprehensive similarity
+- Repair attempts for low-similarity steps
