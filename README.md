@@ -13,7 +13,7 @@ python3 rohil_experiment2.py
 
 3. FINAL CODE:
 
-Experiment 1:
+# Experiment 1:
 
 Environment Setup
 ------------------
@@ -52,7 +52,7 @@ Results will be saved in the 'output' directory with a timestamp:
 - similarity_analysis_lengthen_{timestamp}.png: Visualization for lengthen mode
 
 
-Experiment 3:
+# Experiment 3:
 
 Environment Setup
 ------------------
