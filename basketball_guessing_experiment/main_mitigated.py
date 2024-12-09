@@ -117,7 +117,6 @@ class PlayerGuessingGame:
         response = self.llama_llm.complete(prompt)
         remove_index = int(response.text.strip())
 
-        print(f"Removing index {remove_index - 1} from self.facts")
         self.facts = [fact for i, fact in enumerate(self.facts) if i != (remove_index - 1)]
 
     def play_game(self):

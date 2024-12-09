@@ -125,7 +125,6 @@ class PlayerGuessingGame:
             similarity_score = self.compute_semantic_similarity(guessed_statistic, self.players[self.chosen_player])
             similarity_scores.append(similarity_score)
 
-        print(self.facts)
         return {
             'chosen_player': self.chosen_player,
             'guessed_player': guessed_player,

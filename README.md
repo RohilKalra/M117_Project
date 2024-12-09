@@ -51,6 +51,33 @@ Results will be saved in the 'output' directory with a timestamp:
 - similarity_analysis_shorten_{timestamp}.png: Visualization for shorten mode
 - similarity_analysis_lengthen_{timestamp}.png: Visualization for lengthen mode
 
+# Experiment 2:
+
+Environment Setup
+------------------
+Install dependencies:
+```
+pip install numpy openai sentence-transformers llama-index
+```
+
+Running the Experiment
+-----------------------
+To run the program without the security measure, run:
+
+```
+python main_unmitigated.py
+```
+
+To test the security measure, the program can be run using:
+
+```
+python main_mitigated.py
+```
+
+4. Output
+--------
+- Poisoned Position
+- Average Similarity Score
 
 # Experiment 3:
 
